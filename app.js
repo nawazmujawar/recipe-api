@@ -4,6 +4,7 @@ var app = express();
 var mongoose = require("mongoose");
 var bodyParser = require("body-parser");
 var recipeRouter = require("./api/routes/recipe");
+var commentRouter = require("./api/routes/comment");
 mongoose.connect(
   "mongodb+srv://recipe:" +
     process.env.MONGO_PWD +
@@ -18,6 +19,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.use("/recipes", recipeRouter);
+app.use("/recipes/:id/comments", commentRouter);
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");

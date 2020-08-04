@@ -1,5 +1,6 @@
 var express = require("express");
 var router = express.Router();
+
 const mongoose = express("mongoose");
 var Recipe = require("../models/recipe");
 
@@ -12,11 +13,15 @@ router.get("/", (req, res, next) => {
         length: docs.length,
         recipes: docs.map((doc) => {
           return {
-            id: doc.id,
+            _id: doc._id,
             name: doc.name,
             duration: doc.duration,
             ingredient: doc.ingredient,
             steps: doc.steps,
+            request: {
+              type: "GET",
+              url: "http://localhost:3000/recipes/" + doc._id,
+            },
           };
         }),
       });
@@ -29,7 +34,7 @@ router.get("/", (req, res, next) => {
 });
 
 router.post("/", (req, res, next) => {
-  var recipe = new Recipe({
+  const recipe = new Recipe({
     name: req.body.name,
     duration: req.body.duration,
     ingredient: req.body.ingredient,
@@ -40,7 +45,10 @@ router.post("/", (req, res, next) => {
     .then((response) => {
       res.status(201).json({
         message: "Successfully created recipe",
-        recipe: response,
+        request: {
+          type: "GET",
+          url: "http://localhost:3000/recipes/",
+        },
       });
     })
     .catch((err) => {
@@ -50,8 +58,8 @@ router.post("/", (req, res, next) => {
     });
 });
 
-router.get("/:recipe_id", (req, res, next) => {
-  Recipe.findById(req.params.recipe_id)
+router.get("/:recipeId", (req, res, next) => {
+  Recipe.findById(req.params.recipeId)
     .exec()
     .then((response) => {
       res.status(200).json({
@@ -60,6 +68,10 @@ router.get("/:recipe_id", (req, res, next) => {
         duration: response.duration,
         ingredient: response.ingredient,
         steps: response.steps,
+        request: {
+          type: "GET",
+          url: "http://localhost:3000/recipes/",
+        },
       });
     })
     .catch((err) => {
@@ -69,20 +81,52 @@ router.get("/:recipe_id", (req, res, next) => {
     });
 });
 
-router.patch("/:recipe_id", (req, res, next) => {
-  let id = req.params.recipe_id;
-  // const recipeOps = {};
-  // for (const ops of req.body) {
-  //   recipeOps[ops.propName] = ops.value;
-  // }
-  let recipeOps = req.body;
-  Recipe.update({ id: id }, { $set: recipeOps })
+router.patch("/:recipeId", (req, res, next) => {
+  let id = req.params.recipeId;
+
+  const recipeOps = {};
+  for (const ops of req.body) {
+    recipeOps[ops.propName] = ops.value;
+  }
+  Recipe.update({ _id: id }, { $set: recipeOps })
     .exec()
     .then((result) => {
       const response = {
-        message: "Recipe Updated",
+        message: "Recipe is Updated!",
+        updatedRecipe: {
+          request: {
+            type: "GET",
+            url: "http://localhost:3000/recipes/" + id,
+          },
+        },
       };
       res.status(201).json(response);
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: err,
+      });
+    });
+});
+
+router.delete("/:recipeId", (req, res, next) => {
+  let id = req.params.recipeId;
+  Recipe.remove({ _id: id })
+    .exec()
+    .then((result) => {
+      res.status(200).json({
+        message: "Recipe Deleted!",
+        request: {
+          type: "POST",
+          url: "http://localhost:3000/recipes/",
+          data: {
+            name: "String",
+            duration: "Number",
+            ingredient: "Array",
+            steps: "String",
+          },
+        },
+      });
     })
     .catch((err) => {
       res.status(500).json({
