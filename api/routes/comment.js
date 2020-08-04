@@ -1,6 +1,5 @@
 const express = require("express");
-const router = express.Router();
-const mongoose = express("mongoose");
+const router = express.Router({ mergeParams: true });
 var Comment = require("../models/comment");
 var Recipe = require("../models/recipe");
 
@@ -26,13 +25,49 @@ router.get("/", (req, res, next) => {
     });
 });
 
-router.post("/", (req, res, next) => {
-  Recipe.findById(req.body.recipeId)
+router.post("/", async (req, res, next) => {
+  /*
+  New updated code
+  */
+  const { recipe_id } = req.params;
+  const { comment } = req.body;
+
+  if (Object.keys(req.body).length === 0)
+    return res.status(404).send("Body required");
+
+  const isRecipePresent = await Recipe.findById(recipe_id)
+    .exec()
+    .catch((err) => console.log(err));
+
+  if (!isRecipePresent)
+    return res.status(404).send("Recipe is not in database");
+
+  const commentToSave = new Comment({
+    recipe: recipe_id,
+    content: comment,
+  });
+
+  const commentSaved = await commentToSave
+    .save()
+    .catch((err) => console.log(err));
+
+  if (!commentSaved) return res.status(404);
+
+  return res.status(201).json({
+    statusCode: 201,
+    message: "Comment has been added",
+    data: {
+      comment: commentSaved,
+    },
+  });
+
+  /* Recipe.findById(req.body.recipeId)
     .exec()
     .then((recipe) => {
+      console.log(recipe);
       if (!recipe) {
         res.status(404).json({
-          message: "Recipe does'nt exits ",
+          message: "Recipe doesn't exits ",
         });
       }
       const comment = new Comment({
@@ -55,7 +90,7 @@ router.post("/", (req, res, next) => {
       res.status(500).json({
         error: err,
       });
-    });
+    }); */
 });
 
 module.exports = router;

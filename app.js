@@ -5,21 +5,18 @@ var mongoose = require("mongoose");
 var bodyParser = require("body-parser");
 var recipeRouter = require("./api/routes/recipe");
 var commentRouter = require("./api/routes/comment");
-mongoose.connect(
-  "mongodb+srv://recipe:" +
-    process.env.MONGO_PWD +
-    "@recipe-api.k3rdp.mongodb.net/<dbname>?retryWrites=true&w=majority",
-  {
+mongoose
+  .connect("mongodb://localhost:27017/recipe", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-  }
-);
+  })
+  .then(() => console.log("Database connected"));
 
-app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use("/recipes", recipeRouter);
-app.use("/recipes/:id/comments", commentRouter);
+app.use("/recipes/:recipe_id/comments", commentRouter);
 
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
