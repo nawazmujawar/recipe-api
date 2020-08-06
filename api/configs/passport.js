@@ -12,8 +12,8 @@ passport.use(
       const email = profile.emails[0].value;
       const username = profile.displayName;
       const profilePicture = profile.photos[0].value;
-      const isFound = await User.findOne({ email }).exec();
-      if (isFound) return cb(null, isFound);
+      const foundUser = await User.findOne({ email }).exec();
+      if (foundUser) return cb(null, foundUser);
       const userCreated = await User.create({
         email,
         username,

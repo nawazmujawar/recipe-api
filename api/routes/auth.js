@@ -13,12 +13,8 @@ auth
       const { _id } = req.user;
       const accessToken = generateAccessToken(_id);
       console.log(accessToken);
-      res.status(200).json(
-        response(200, "Authentication successful", {
-          accessToken,
-          user: req.user,
-        })
-      );
+      const data = { accessToken, user: req.user };
+      res.status(200).json(data);
     }
   );
 

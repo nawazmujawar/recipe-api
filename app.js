@@ -19,7 +19,8 @@ mongoose
     useUnifiedTopology: true,
     useFindAndModify: true,
   })
-  .then(() => console.log("Database connected"));
+  .then(() => console.log("Database connected"))
+  .catch((error) => console.error(error));
 app.use(morgan("dev"));
 app.use(cors());
 app.use(bodyParser.json());
@@ -29,19 +30,5 @@ app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
 app.use("/recipes/:recipe_id/comments", commentRouter); */
 app.use(passport.initialize());
 app.use(passport.session());
-
 app.use("/api", apiRouter);
-
-/* app.use((req, res, next) => {
-  const error = new Error("Not Found");
-  error.status = 404;
-  next(error);
-});
-
-app.use((error, req, res, next) => {
-  res.status(error.status || 500);
-  res.json({
-    message: error.message,
-  });
-}); */
 module.exports = app;
