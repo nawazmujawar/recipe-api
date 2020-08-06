@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router({ mergeParams: true });
 var Comment = require("../models/comment");
 var Recipe = require("../models/recipe");
+const recipe = require("../models/recipe");
 
 router.get("/", async (req, res, next) => {
   try {
@@ -17,7 +18,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", checkAuth, async (req, res, next) => {
   /*
   New updated code
   */
@@ -61,15 +62,35 @@ router.post("/", async (req, res, next) => {
     data: {
       comment: commentSaved,
     },
+    request: {
+      type: "GET",
+      url: "http://localhost:3000/recipes/" + recipe,
+    },
   });
 });
-
-router.delete("/:commentId", async (req, res, next) => {
+router.patch("/:commentId", checkAuth, async (req, res, next) => {
+  let id = req.params.commentId;
+  let recipeId = req.params.recipeId;
+  const commentOps = {};
+  for (const ops of req.body) {
+    commentOps[ops.propName] = ops.value;
+  }
+  Comment.update({ _id: id }, { $set: commentOps }).exec().catch(console.error);
+  return res.status(200).json({
+    message: "Comment Updated",
+    request: {
+      type: "GET",
+      url: "http://localhost:3000/recipes/" + recipeId,
+    },
+  });
+});
+router.delete("/:commentId", checkAuth, async (req, res, next) => {
   const response = await Comment.remove(req.params.commentId)
     .exec()
     .catch(console.error);
   return res.status(200).json({
     message: "Comment Deleted",
+    deletedComment: response,
   });
 });
 module.exports = router;

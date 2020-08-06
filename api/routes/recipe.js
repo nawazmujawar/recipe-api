@@ -1,6 +1,7 @@
 var express = require("express");
 const fs = require("fs").promises;
 var router = express.Router();
+var checkAuth = require("../middleware/checkAuth");
 
 const mongoose = express("mongoose");
 var Recipe = require("../models/recipe");
@@ -43,7 +44,7 @@ router.route("/").get((req, res, next) => {
     });
 });
 
-router.route("/").post(upload.single("image"), (req, res, next) => {
+router.route("/").post(checkAuth, upload.single("image"), (req, res, next) => {
   const recipe = new Recipe({
     name: req.body.name,
     duration: req.body.duration,
@@ -96,7 +97,7 @@ router
         });
       });
   })
-  .patch((req, res, next) => {
+  .patch(checkAuth, (req, res, next) => {
     let id = req.params.recipeId;
 
     const recipeOps = {};
@@ -123,7 +124,7 @@ router
         });
       });
   })
-  .delete(async (req, res, next) => {
+  .delete(checkAuth, async (req, res, next) => {
     const id = req.params.recipeId;
     const removedRecipe = await Recipe.findByIdAndRemove(id)
       .exec()
