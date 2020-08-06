@@ -3,26 +3,18 @@ const router = express.Router({ mergeParams: true });
 var Comment = require("../models/comment");
 var Recipe = require("../models/recipe");
 
-router.get("/", (req, res, next) => {
-  Comment.find()
-    .populate("Recipe")
-    .exec()
-    .then((comments) => {
-      res.status(200).json({
-        length: comments.length,
-        allComments: comments.map((c) => {
-          return {
-            recipe: c.recipe,
-            content: c.content,
-          };
-        }),
-      });
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
-      });
+router.get("/", async (req, res, next) => {
+  try {
+    const { recipe_id } = req.params;
+    if (recipe_id === undefined)
+      return res.status(404).send("Recipe not found");
+    const comments = await Comment.find({ recipe: recipe_id }).exec();
+    return res.status(200).json({
+      data: comments,
     });
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 router.post("/", async (req, res, next) => {
@@ -44,14 +36,24 @@ router.post("/", async (req, res, next) => {
 
   const commentToSave = new Comment({
     recipe: recipe_id,
-    content: comment,
+    comment: comment,
   });
+  //Update recipe
 
   const commentSaved = await commentToSave
     .save()
     .catch((err) => console.log(err));
 
-  if (!commentSaved) return res.status(404);
+  const commentId = commentToSave._id;
+
+  await Recipe.findByIdAndUpdate(recipe_id, {
+    $push: { comment: commentId },
+  }).catch((err) => console.log(err));
+
+  if (!commentSaved)
+    return res.status(404).json({
+      message: "Something went wrong",
+    });
 
   return res.status(201).json({
     statusCode: 201,
@@ -60,37 +62,14 @@ router.post("/", async (req, res, next) => {
       comment: commentSaved,
     },
   });
-
-  /* Recipe.findById(req.body.recipeId)
-    .exec()
-    .then((recipe) => {
-      console.log(recipe);
-      if (!recipe) {
-        res.status(404).json({
-          message: "Recipe doesn't exits ",
-        });
-      }
-      const comment = new Comment({
-        recipe: req.body.recipe,
-        content: req.body.content,
-      });
-      return comment.save();
-    })
-    .then((response) => {
-      res.status(201).json({
-        message: "Comment successfull!",
-        commentCreated: {
-          _id: response._id,
-          recipe: response.recipeId,
-          content: response.content,
-        },
-      });
-    })
-    .catch((err) => {
-      res.status(500).json({
-        error: err,
-      });
-    }); */
 });
 
+router.delete("/:commentId", async (req, res, next) => {
+  const response = await Comment.remove(req.params.commentId)
+    .exec()
+    .catch(console.error);
+  return res.status(200).json({
+    message: "Comment Deleted",
+  });
+});
 module.exports = router;

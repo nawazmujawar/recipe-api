@@ -6,7 +6,7 @@ const commentSchema = mongoose.Schema({
     ref: "Recipe",
     require: true,
   },
-  content: { type: String },
+  comment: { type: String },
 });
 
 module.exports = mongoose.model("Comment", commentSchema);
