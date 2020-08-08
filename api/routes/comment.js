@@ -3,13 +3,16 @@ const router = express.Router({ mergeParams: true });
 var Comment = require("../models/comment");
 var Recipe = require("../models/recipe");
 const recipe = require("../models/recipe");
-
+const checkAuth = require("../middleware/checkAuth");
 router.get("/", async (req, res, next) => {
   try {
     const { recipe_id } = req.params;
     if (recipe_id === undefined)
       return res.status(404).send("Recipe not found");
-    const comments = await Comment.find({ recipe: recipe_id }).exec();
+    const comments = await Comment.find({ recipe: recipe_id })
+      .populate("user", "username")
+      .select("username")
+      .exec();
     return res.status(200).json({
       data: comments,
     });
@@ -25,10 +28,13 @@ router.post("/", checkAuth, async (req, res, next) => {
   const { recipe_id } = req.params;
   const { comment } = req.body;
 
+  const user = req.user._id;
+
   if (Object.keys(req.body).length === 0)
     return res.status(404).send("Body required");
 
   const isRecipePresent = await Recipe.findById(recipe_id)
+
     .exec()
     .catch((err) => console.log(err));
 
@@ -38,6 +44,7 @@ router.post("/", checkAuth, async (req, res, next) => {
   const commentToSave = new Comment({
     recipe: recipe_id,
     comment: comment,
+    user,
   });
   //Update recipe
 
@@ -64,30 +71,30 @@ router.post("/", checkAuth, async (req, res, next) => {
     },
     request: {
       type: "GET",
-      url: "http://localhost:3000/recipes/" + recipe,
+      url: `${process.env.HOSTNAME}${process.env.PORT}/api/recipes/${recipe_id}`,
     },
   });
 });
 router.patch("/:commentId", checkAuth, async (req, res, next) => {
   let id = req.params.commentId;
   let recipeId = req.params.recipeId;
-  const commentOps = {};
-  for (const ops of req.body) {
-    commentOps[ops.propName] = ops.value;
-  }
-  Comment.update({ _id: id }, { $set: commentOps }).exec().catch(console.error);
+  let change = req.body;
+  await Comment.update({ _id: id }, { $set: change })
+    .exec()
+    .catch(console.error);
   return res.status(200).json({
     message: "Comment Updated",
     request: {
       type: "GET",
-      url: "http://localhost:3000/recipes/" + recipeId,
+      url: `${process.env.HOSTNAME}${process.env.PORT}/api/recipes/${recipeId}`,
     },
   });
 });
 router.delete("/:commentId", checkAuth, async (req, res, next) => {
-  const response = await Comment.remove(req.params.commentId)
+  const { commentId } = req.params;
+  const response = await Comment.findByIdAndRemove(commentId)
     .exec()
-    .catch(console.error);
+    .catch((error) => console.log(error));
   return res.status(200).json({
     message: "Comment Deleted",
     deletedComment: response,

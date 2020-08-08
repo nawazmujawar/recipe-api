@@ -14,7 +14,7 @@ function resolveFilePath(filePath) {
 
 function generateAccessToken(_id) {
   try {
-    return jwt.sign({ _id }, "dsdadfjsfjsdjfjskfjsdkfjksljfkljfk");
+    return jwt.sign({ _id }, process.env.JWT_KEY, { expiresIn: "12h" });
   } catch (error) {
     console.log(error);
   }

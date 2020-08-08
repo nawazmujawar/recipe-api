@@ -12,8 +12,10 @@ const { response, resolveFilePath } = require("../utils/utils");
 router.route("/").get((req, res, next) => {
   console.log("Getting");
   Recipe.find()
+    .populate("user", "username")
     .exec()
     .then((docs) => {
+      console.log(docs);
       //const imagePath = `http://localhost:3000/uploads/${req.file.filename}`;
       res.status(200).json({
         message: "All Recipes",
@@ -22,15 +24,16 @@ router.route("/").get((req, res, next) => {
           const imagePath = doc.image.toString().replace(/\\/i, "/");
           console.log(imagePath);
           return {
+            user: doc.user,
             _id: doc._id,
             name: doc.name,
             duration: doc.duration,
             ingredient: doc.ingredient,
             steps: doc.steps,
-            image: `http://localhost:3000/${imagePath}`,
+            image: `${process.env.HOSTNAME}${process.env.PORT}/${imagePath}`,
             request: {
               type: "GET",
-              url: "http://localhost:3000/recipes/" + doc._id,
+              url: `${process.env.HOSTNAME}${process.env.PORT}/api/recipes/${doc._id}`,
             },
           };
         }),
@@ -45,7 +48,10 @@ router.route("/").get((req, res, next) => {
 });
 
 router.route("/").post(checkAuth, upload.single("image"), (req, res, next) => {
+  const user = req.user._id;
+
   const recipe = new Recipe({
+    user,
     name: req.body.name,
     duration: req.body.duration,
     ingredient: req.body.ingredient,
@@ -59,7 +65,7 @@ router.route("/").post(checkAuth, upload.single("image"), (req, res, next) => {
         message: "Successfully created recipe",
         request: {
           type: "GET",
-          url: "http://localhost:3000/recipes/",
+          url: `${process.env.HOSTNAME}${process.env.PORT}/api/recipes`,
         },
       });
     })
@@ -87,7 +93,7 @@ router
           comments: response.comment,
           request: {
             type: "GET",
-            url: "http://localhost:3000/recipes/",
+            url: `${process.env.HOSTNAME}${process.env.PORT}/api/recipes`,
           },
         });
       })
@@ -112,7 +118,7 @@ router
           updatedRecipe: {
             request: {
               type: "GET",
-              url: "http://localhost:3000/recipes/" + id,
+              url: `${process.env.HOSTNAME}${process.env.PORT}/api/recipes/${id}`,
             },
           },
         };
