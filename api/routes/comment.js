@@ -17,7 +17,10 @@ router.get("/", async (req, res, next) => {
       data: comments,
     });
   } catch (error) {
-    console.log(error);
+    res.status(404).json({
+      error: err,
+      message: "Comment not found",
+    });
   }
 });
 
@@ -36,7 +39,11 @@ router.post("/", checkAuth, async (req, res, next) => {
   const isRecipePresent = await Recipe.findById(recipe_id)
 
     .exec()
-    .catch((err) => console.log(err));
+    .catch((err) =>
+      res.status(500).json({
+        error: err,
+      })
+    );
 
   if (!isRecipePresent)
     return res.status(404).send("Recipe is not in database");
@@ -48,15 +55,21 @@ router.post("/", checkAuth, async (req, res, next) => {
   });
   //Update recipe
 
-  const commentSaved = await commentToSave
-    .save()
-    .catch((err) => console.log(err));
+  const commentSaved = await commentToSave.save().catch((err) => {
+    res.status(500).json({
+      error: err,
+    });
+  });
 
   const commentId = commentToSave._id;
 
   await Recipe.findByIdAndUpdate(recipe_id, {
     $push: { comment: commentId },
-  }).catch((err) => console.log(err));
+  }).catch((err) =>
+    res.status(500).json({
+      error: err,
+    })
+  );
 
   if (!commentSaved)
     return res.status(404).json({
@@ -78,10 +91,20 @@ router.post("/", checkAuth, async (req, res, next) => {
 router.patch("/:commentId", checkAuth, async (req, res, next) => {
   let id = req.params.commentId;
   let recipeId = req.params.recipeId;
+  let userId = req.user._id;
   let change = req.body;
-  await Comment.update({ _id: id }, { $set: change })
+  await Comment.update(
+    {
+      $and: [{ _id: id }, { user: userId }],
+    },
+    { $set: change }
+  )
     .exec()
-    .catch(console.error);
+    .catch((err) => {
+      res.status(500).json({
+        error: err,
+      });
+    });
   return res.status(200).json({
     message: "Comment Updated",
     request: {
@@ -92,9 +115,22 @@ router.patch("/:commentId", checkAuth, async (req, res, next) => {
 });
 router.delete("/:commentId", checkAuth, async (req, res, next) => {
   const { commentId } = req.params;
-  const response = await Comment.findByIdAndRemove(commentId)
+
+  const userId = req.user._id;
+  console.log(userId);
+
+  const response = await Comment.findOneAndRemove({
+    $and: [{ _id: commentId }, { user: userId }],
+  })
     .exec()
-    .catch((error) => console.log(error));
+    .catch((error) =>
+      res.status(500).json({
+        error: error,
+      })
+    );
+
+  if (!response) return res.send("Error");
+
   return res.status(200).json({
     message: "Comment Deleted",
     deletedComment: response,

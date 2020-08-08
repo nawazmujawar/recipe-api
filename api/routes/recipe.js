@@ -10,41 +10,63 @@ const upload = require("../configs/multer");
 const { response, resolveFilePath } = require("../utils/utils");
 
 router.route("/").get((req, res, next) => {
-  console.log("Getting");
-  Recipe.find()
-    .populate("user", "username")
-    .exec()
-    .then((docs) => {
-      console.log(docs);
-      //const imagePath = `http://localhost:3000/uploads/${req.file.filename}`;
-      res.status(200).json({
-        message: "All Recipes",
-        length: docs.length,
-        recipes: docs.map((doc) => {
-          const imagePath = doc.image.toString().replace(/\\/i, "/");
-          console.log(imagePath);
-          return {
-            user: doc.user,
-            _id: doc._id,
-            name: doc.name,
-            duration: doc.duration,
-            ingredient: doc.ingredient,
-            steps: doc.steps,
-            image: `${process.env.HOSTNAME}/${imagePath}`,
-            request: {
-              type: "GET",
-              url: `${process.env.HOSTNAME}/api/recipes/${doc._id}`,
-            },
-          };
-        }),
+  //const userId = req.user._id;
+  const { user } = req.query;
+  console.log(user);
+  if (user) {
+    Recipe.find({ user: user })
+      .populate("user", "username")
+      .exec()
+      .then((docs) => {
+        console.log(docs);
+        //const imagePath = `http://localhost:3000/uploads/${req.file.filename}`;
+        res.status(200).json({
+          message: "All Recipes",
+          docs,
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(404).json({
+          message: "Something went wrong!",
+        });
       });
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(404).json({
-        message: "Something went wrong!",
+  } else {
+    Recipe.find()
+      .populate("user", "username")
+      .exec()
+      .then((docs) => {
+        console.log(docs);
+        //const imagePath = `http://localhost:3000/uploads/${req.file.filename}`;
+        res.status(200).json({
+          message: "All Recipes",
+          length: docs.length,
+          recipes: docs.map((doc) => {
+            const imagePath = doc.image.toString().replace(/\\/i, "/");
+            console.log(imagePath);
+            return {
+              user: doc.user,
+              _id: doc._id,
+              name: doc.name,
+              duration: doc.duration,
+              ingredient: doc.ingredient,
+              steps: doc.steps,
+              image: `${process.env.HOSTNAME}/${imagePath}`,
+              request: {
+                type: "GET",
+                url: `${process.env.HOSTNAME}/api/recipes/${doc._id}`,
+              },
+            };
+          }),
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(404).json({
+          message: "Recipes not found",
+        });
       });
-    });
+  }
 });
 
 router.route("/").post(checkAuth, upload.single("image"), (req, res, next) => {
@@ -80,12 +102,18 @@ router
   .route("/:recipeId")
   .get((req, res, next) => {
     Recipe.findById(req.params.recipeId)
-      .populate("comment")
+      .populate("user", "username")
+      .populate({
+        path: "comment",
+        select: "comment _id user",
+        populate: { path: "user", select: "username" },
+      })
       .exec()
       .then((response) => {
         console.log(response);
         res.status(200).json({
           id: response.id,
+          user: response.user,
           name: response.name,
           duration: response.duration,
           ingredient: response.ingredient,
@@ -98,19 +126,26 @@ router
         });
       })
       .catch((err) => {
-        res.status(500).json({
+        res.status(404).json({
           error: err,
+          message: "Recipe not found",
         });
       });
   })
   .patch(checkAuth, (req, res, next) => {
+    let userId = req.user._id;
     let id = req.params.recipeId;
 
     const recipeOps = {};
     for (const ops of req.body) {
       recipeOps[ops.propName] = ops.value;
     }
-    Recipe.update({ _id: id }, { $set: recipeOps })
+    Recipe.update(
+      {
+        $and: [{ _id: id }, { user: userId }],
+      },
+      { $set: recipeOps }
+    )
       .exec()
       .then((result) => {
         const response = {
@@ -132,9 +167,16 @@ router
   })
   .delete(checkAuth, async (req, res, next) => {
     const id = req.params.recipeId;
-    const removedRecipe = await Recipe.findByIdAndRemove(id)
+    const userId = req.user._id;
+    const removedRecipe = await Recipe.findOneAndRemove({
+      $and: [{ _id: id }, { user: userId }],
+    })
       .exec()
-      .catch((error) => console.log(error));
+      .catch((error) =>
+        res.status(500).json({
+          error: err,
+        })
+      );
     if (!removedRecipe)
       return res.status(404).json(response(404, "Recipe not found", null));
     const filePath = resolveFilePath(removedRecipe.image);
