@@ -71,7 +71,7 @@ router.post("/", checkAuth, async (req, res, next) => {
     },
     request: {
       type: "GET",
-      url: `${process.env.HOSTNAME}${process.env.PORT}/api/recipes/${recipe_id}`,
+      url: `${process.env.HOSTNAME}/api/recipes/${recipe_id}`,
     },
   });
 });
@@ -86,7 +86,7 @@ router.patch("/:commentId", checkAuth, async (req, res, next) => {
     message: "Comment Updated",
     request: {
       type: "GET",
-      url: `${process.env.HOSTNAME}${process.env.PORT}/api/recipes/${recipeId}`,
+      url: `${process.env.HOSTNAME}/api/recipes/${recipeId}`,
     },
   });
 });

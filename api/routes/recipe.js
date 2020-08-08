@@ -30,10 +30,10 @@ router.route("/").get((req, res, next) => {
             duration: doc.duration,
             ingredient: doc.ingredient,
             steps: doc.steps,
-            image: `${process.env.HOSTNAME}${process.env.PORT}/${imagePath}`,
+            image: `${process.env.HOSTNAME}/${imagePath}`,
             request: {
               type: "GET",
-              url: `${process.env.HOSTNAME}${process.env.PORT}/api/recipes/${doc._id}`,
+              url: `${process.env.HOSTNAME}/api/recipes/${doc._id}`,
             },
           };
         }),
@@ -65,7 +65,7 @@ router.route("/").post(checkAuth, upload.single("image"), (req, res, next) => {
         message: "Successfully created recipe",
         request: {
           type: "GET",
-          url: `${process.env.HOSTNAME}${process.env.PORT}/api/recipes`,
+          url: `${process.env.HOSTNAME}/api/recipes`,
         },
       });
     })
@@ -93,7 +93,7 @@ router
           comments: response.comment,
           request: {
             type: "GET",
-            url: `${process.env.HOSTNAME}${process.env.PORT}/api/recipes`,
+            url: `${process.env.HOSTNAME}/api/recipes`,
           },
         });
       })
@@ -118,7 +118,7 @@ router
           updatedRecipe: {
             request: {
               type: "GET",
-              url: `${process.env.HOSTNAME}${process.env.PORT}/api/recipes/${id}`,
+              url: `${process.env.HOSTNAME}/api/recipes/${id}`,
             },
           },
         };
