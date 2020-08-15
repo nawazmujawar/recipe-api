@@ -10,8 +10,10 @@ const path = require("path");
 const cors = require("cors");
 const morgan = require("morgan");
 
+
 const passport = require("./api/configs/passport");
 const apiRouter = require("./api/routes/index");
+
 
 mongoose
   .connect(process.env.MONGO_URL, {
@@ -23,6 +25,7 @@ mongoose
   .catch((error) => console.error(error));
 app.use(morgan("dev"));
 app.use(cors());
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
@@ -30,5 +33,6 @@ app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
 app.use("/recipes/:recipe_id/comments", commentRouter); */
 app.use(passport.initialize());
 app.use(passport.session());
+
 app.use("/api", apiRouter);
 module.exports = app;

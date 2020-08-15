@@ -16,5 +16,5 @@ const recipeSchema = mongoose.Schema({
   image: { type: String },
   user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "User" },
 });
-
+recipeSchema.index({ name: "text", steps: "text", ingredient: "text" });
 module.exports = mongoose.model("Recipe", recipeSchema);

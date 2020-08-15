@@ -12,8 +12,27 @@ const { response, resolveFilePath } = require("../utils/utils");
 router.route("/").get((req, res, next) => {
   //const userId = req.user._id;
   const { user } = req.query;
-  console.log(user);
-  if (user) {
+  const { search } = req.query;
+
+  if (search) {
+    Recipe.find({ $text: { $search: search } })
+      .populate("user", "username")
+      .exec()
+      .then((docs) => {
+        console.log(docs);
+        //const imagePath = `http://localhost:3000/uploads/${req.file.filename}`;
+        res.status(200).json({
+          message: "All Recipes",
+          docs,
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(404).json({
+          message: "Something went wrong!",
+        });
+      });
+  } else if (user) {
     Recipe.find({ user: user })
       .populate("user", "username")
       .exec()
