@@ -15,12 +15,12 @@ const addSocketIdToSession = (req, res, next) => {
   req.session.socketId = req.query.socketId;
   next();
 };
-auth
-  .route("/google")
-  .get(
-    addSocketIdToSession,
-    passport.authenticate("google", { scope: ["profile", "email","profilePicture"] })
-  );
+auth.route("/google").get(
+  addSocketIdToSession,
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+  })
+);
 
 auth
   .route("/google/callback")
