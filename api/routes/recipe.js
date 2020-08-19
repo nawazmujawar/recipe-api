@@ -122,7 +122,7 @@ router
   .get((req, res, next) => {
     Recipe.findById(req.params.recipeId)
       .populate({ path: "user", select: "username profilePicture" })
-      .populate("comment")
+      .populate({ path: "comment", select: "user" })
       .exec()
       .then((response) => {
         console.log(response);
