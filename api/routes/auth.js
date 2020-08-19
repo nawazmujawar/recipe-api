@@ -19,7 +19,7 @@ auth
   .route("/google")
   .get(
     addSocketIdToSession,
-    passport.authenticate("google", { scope: ["profile", "email"] })
+    passport.authenticate("google", { scope: ["profile", "email","profilePicture"] })
   );
 
 auth
