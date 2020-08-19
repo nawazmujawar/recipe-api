@@ -4,14 +4,14 @@ var Comment = require("../models/comment");
 var Recipe = require("../models/recipe");
 const recipe = require("../models/recipe");
 const checkAuth = require("../middleware/checkAuth");
+
 router.get("/", async (req, res, next) => {
   try {
     const { recipe_id } = req.params;
     if (recipe_id === undefined)
       return res.status(404).send("Recipe not found");
     const comments = await Comment.find({ recipe: recipe_id })
-      .populate("user", "username")
-      .select("username")
+      .populate("user")
       .exec();
     return res.status(200).json({
       data: comments,

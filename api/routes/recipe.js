@@ -16,7 +16,7 @@ router.route("/").get((req, res, next) => {
 
   if (search) {
     Recipe.find({ $text: { $search: search } })
-      .populate("user", "username")
+      .populate("user")
       .exec()
       .then((docs) => {
         console.log(docs);
@@ -34,7 +34,7 @@ router.route("/").get((req, res, next) => {
       });
   } else if (user) {
     Recipe.find({ user: user })
-      .populate("user", "username")
+      .populate("user")
       .exec()
       .then((docs) => {
         console.log(docs);
@@ -52,7 +52,7 @@ router.route("/").get((req, res, next) => {
       });
   } else {
     Recipe.find()
-      .populate("user", "username")
+      .populate("user")
       .exec()
       .then((docs) => {
         console.log(docs);
@@ -121,12 +121,8 @@ router
   .route("/:recipeId")
   .get((req, res, next) => {
     Recipe.findById(req.params.recipeId)
-      .populate("user", "username")
-      .populate({
-        path: "comment",
-        select: "comment _id user",
-        populate: { path: "user", select: "username" },
-      })
+      .populate("user")
+      .populate("comment")
       .exec()
       .then((response) => {
         console.log(response);
