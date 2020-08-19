@@ -11,7 +11,7 @@ router.get("/", async (req, res, next) => {
     if (recipe_id === undefined)
       return res.status(404).send("Recipe not found");
     const comments = await Comment.find({ recipe: recipe_id })
-      .populate("user")
+      .populate("user", "username , profilePicture")
       .exec();
     return res.status(200).json({
       data: comments,
