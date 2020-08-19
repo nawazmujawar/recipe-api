@@ -134,6 +134,7 @@ router
           id: response.id,
           user: response.user,
           name: response.name,
+          image: response.image,
           duration: response.duration,
           ingredient: response.ingredient,
           steps: response.steps,
