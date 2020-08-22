@@ -151,33 +151,22 @@ router
   .patch(checkAuth, (req, res, next) => {
     let userId = req.user._id;
     let id = req.params.recipeId;
-
-    const recipeOps = {};
-    for (const ops of req.body) {
-      recipeOps[ops.propName] = ops.value;
-    }
     Recipe.update(
+      { $and: [{ _id: id }, { user: userId }] },
+      { $set: req.body },
       {
-        $and: [{ _id: id }, { user: userId }],
-      },
-      { $set: recipeOps }
+        new: true,
+      }
     )
-      .exec()
-      .then((result) => {
-        const response = {
-          message: "Recipe is Updated!",
-          updatedRecipe: {
-            request: {
-              type: "GET",
-              url: `${process.env.HOST}/api/recipes/${id}`,
-            },
-          },
-        };
-        res.status(201).json(response);
+      .then((recipe) => {
+        return res.status(200).json({
+          recipe,
+        });
       })
-      .catch((err) => {
-        res.status(500).json({
-          error: err,
+      .catch((error) => {
+        console.log(error);
+        return res.status(500).json({
+          error,
         });
       });
   })
