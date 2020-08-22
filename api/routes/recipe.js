@@ -6,20 +6,21 @@ var checkAuth = require("../middleware/checkAuth");
 const mongoose = express("mongoose");
 var Recipe = require("../models/recipe");
 
+const redisClient = require("../configs/redis");
+
 const upload = require("../configs/multer");
 const { response, resolveFilePath } = require("../utils/utils");
+const { parse } = require("path");
 
 router.route("/").get((req, res, next) => {
   //const userId = req.user._id;
   const { user } = req.query;
   const { search } = req.query;
-
   if (search) {
     Recipe.find({ $text: { $search: search } })
       .populate("user")
       .exec()
       .then((docs) => {
-        console.log(docs);
         //const imagePath = `http://localhost:3000/uploads/${req.file.filename}`;
         res.status(200).json({
           message: "All Recipes",
@@ -55,14 +56,12 @@ router.route("/").get((req, res, next) => {
       .populate("user")
       .exec()
       .then((docs) => {
-        console.log(docs);
         //const imagePath = `http://localhost:3000/uploads/${req.file.filename}`;
         res.status(200).json({
           message: "All Recipes",
           length: docs.length,
           recipes: docs.map((doc) => {
             const imagePath = doc.image.toString().replace(/\\/i, "/");
-            console.log(imagePath);
             return {
               user: doc.user,
               _id: doc._id,
@@ -123,10 +122,28 @@ router
     Recipe.findById(req.params.recipeId)
       .populate("user")
       .populate("comment")
-      .exec()
       .then((response) => {
-        console.log(response);
-        res.status(200).json({
+        // console.log(response);
+
+        redisClient.setex(
+          `recipe-${req.params.recipeId}`,
+          10,
+          JSON.stringify(response)
+        );
+
+        redisClient.get(`recipe-${req.params.recipeId}`, (err, response) => {
+          if (err) {
+            console.log(err);
+          }
+          if (response) {
+            const data = JSON.parse(response);
+            res.status(200).json(data);
+          } else {
+            return res.status(200).json(response);
+          }
+        });
+
+        /* res.status(200).json({
           id: response.id,
           user: response.user,
           name: response.name,
@@ -139,7 +156,7 @@ router
             type: "GET",
             url: `${process.env.HOST}/api/recipes`,
           },
-        });
+        }); */
       })
       .catch((err) => {
         res.status(404).json({

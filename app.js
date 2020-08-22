@@ -10,10 +10,14 @@ const path = require("path");
 const cors = require("cors");
 const morgan = require("morgan");
 
-
 const passport = require("./api/configs/passport");
 const apiRouter = require("./api/routes/index");
 
+const redisClient = require("./api/configs/redis");
+
+redisClient.once("ready", () => {
+  console.log("Connected");
+});
 
 mongoose
   .connect(process.env.MONGO_URL, {
