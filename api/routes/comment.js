@@ -88,6 +88,14 @@ router.post("/", checkAuth, async (req, res, next) => {
     },
   });
 });
+router.get("/:commentId", checkAuth, async (req, res, next) => {
+  console.log("Getting");
+  let id = req.params.commentId;
+  let recipeId = req.params.recipeId;
+  let userId = req.user._id;
+  const comment = await Comment.findById(id);
+  return res.status(200).json(comment);
+});
 router.patch("/:commentId", checkAuth, async (req, res, next) => {
   let id = req.params.commentId;
   let recipeId = req.params.recipeId;
