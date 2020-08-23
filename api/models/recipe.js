@@ -10,7 +10,7 @@ const comments = [
 const recipeSchema = mongoose.Schema({
   name: { type: String, require: true },
   duration: { type: Number, require: true },
-  ingredient: { type: Array, require: true },
+  ingredient: { type: String, require: true },
   steps: { type: String },
   comment: comments,
   image: { type: String },

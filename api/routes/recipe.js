@@ -143,20 +143,6 @@ router
           }
         });
 
-        /* res.status(200).json({
-          id: response.id,
-          user: response.user,
-          name: response.name,
-          image: response.image,
-          duration: response.duration,
-          ingredient: response.ingredient,
-          steps: response.steps,
-          comments: response.comment,
-          request: {
-            type: "GET",
-            url: `${process.env.HOST}/api/recipes`,
-          },
-        }); */
       })
       .catch((err) => {
         res.status(404).json({
