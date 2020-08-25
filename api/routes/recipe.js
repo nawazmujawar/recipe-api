@@ -63,22 +63,7 @@ router.route("/").get((req, res, next) => {
         res.status(200).json({
           message: "All Recipes",
           length: docs.length,
-          recipes: docs.map((doc) => {
-            const imagePath = doc.image.toString().replace(/\\/i, "/");
-            return {
-              user: doc.user,
-              _id: doc._id,
-              name: doc.name,
-              duration: doc.duration,
-              ingredient: doc.ingredient,
-              steps: doc.steps,
-              image: `${process.env.HOST}/${imagePath}`,
-              request: {
-                type: "GET",
-                url: `${process.env.HOST}/api/recipes/${doc._id}`,
-              },
-            };
-          }),
+          recipes: docs,
         });
       })
       .catch((err) => {
@@ -93,19 +78,22 @@ router.route("/").get((req, res, next) => {
 router.route("/").post(checkAuth, upload.single("image"), (req, res, next) => {
   const user = req.user._id;
 
+  const imagePath = req.file.path.toString().replace(/\\/i, "/");
+
   const recipe = new Recipe({
     user,
     name: req.body.name,
     duration: req.body.duration,
     ingredient: req.body.ingredient,
     steps: req.body.steps,
-    image: req.file.path,
+    image: `${process.env.HOST}/${imagePath}`,
   });
   recipe
     .save()
     .then((response) => {
       res.status(201).json({
         message: "Successfully created recipe",
+        data: response,
         request: {
           type: "GET",
           url: `${process.env.HOST}/api/recipes`,
