@@ -18,6 +18,7 @@ router.route("/").get((req, res, next) => {
   const { search } = req.query;
   if (search) {
     Recipe.find({ $text: { $search: search } })
+      .sort({ createdAt: -1 })
       .populate("user")
       .exec()
       .then((docs) => {
@@ -36,6 +37,7 @@ router.route("/").get((req, res, next) => {
   } else if (user) {
     Recipe.find({ user: user })
       .populate("user")
+      .sort({ createdAt: -1 })
       .exec()
       .then((docs) => {
         console.log(docs);
@@ -53,6 +55,7 @@ router.route("/").get((req, res, next) => {
       });
   } else {
     Recipe.find()
+      .sort({ createdAt: -1 })
       .populate("user")
       .exec()
       .then((docs) => {
@@ -142,7 +145,6 @@ router
             return res.status(200).json(response);
           }
         });
-
       })
       .catch((err) => {
         res.status(404).json({

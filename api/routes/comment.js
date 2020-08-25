@@ -12,6 +12,7 @@ router.get("/", async (req, res, next) => {
       return res.status(404).send("Recipe not found");
     const comments = await Comment.find({ recipe: recipe_id })
       .populate({ path: "user", select: "username profilePicture" })
+      .sort({ createdAt: -1 })
       .exec();
     return res.status(200).json({
       data: comments,

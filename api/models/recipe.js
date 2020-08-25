@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+var timestamps = require("mongoose-timestamp");
 const comments = [
   {
     type: mongoose.Schema.Types.ObjectId,
@@ -16,5 +16,6 @@ const recipeSchema = mongoose.Schema({
   image: { type: String },
   user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "User" },
 });
+recipeSchema.plugin(timestamps);
 recipeSchema.index({ name: "text", steps: "text", ingredient: "text" });
 module.exports = mongoose.model("Recipe", recipeSchema);
